@@ -1,11 +1,19 @@
 package com.example.springsecurityform.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceAware;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
 public class DemoWebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private MessageSource messageSource;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -18,6 +26,19 @@ public class DemoWebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 // LOGIN
                 .formLogin()
+                    .loginPage("/login")
+                        .permitAll()
                     .defaultSuccessUrl("/success");
+
+        // メッセージをカスタマイズするために、メッセージソースを設定する
+        AuthenticationManager a = this.authenticationManager();
+        if (a instanceof ProviderManager) {
+            ProviderManager a2 = (ProviderManager)a;
+            a2.getProviders().forEach(p -> {
+                if (p instanceof MessageSourceAware) {
+                    ((MessageSourceAware)p).setMessageSource(messageSource);
+                }
+            });
+        }
     }
 }
